@@ -1,6 +1,6 @@
 # The Zélus Clock
 
-To build and start the clock, type the following command:
+To build and start the clock, type the following commands:
 
 ```
 make

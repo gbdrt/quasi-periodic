@@ -30,7 +30,7 @@ depend: .depend
 
 
 clean:
-	-@rm -f $(EXAMPLE:.zls=.ml) $(EXAMPLE:.zls=_main.ml)
+	-@rm -f $(EXAMPLE:.zls=.ml) qpa.ml $(EXAMPLE:.zls=_main.ml)
 	-@rm -f *.o *.cm[oix] *.annot *.obc *.zci .depend
 	-@rm -f $(EXAMPLE:%.zls=%.byte)
 

@@ -9,4 +9,4 @@ Type:
 make
 ```
 
-To diplay the type signatures inferred by the Zélus compilator.
+to diplay the type signatures inferred by the Zélus compiler.

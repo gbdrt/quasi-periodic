@@ -2,8 +2,8 @@
 
 This repository contains the source code of the examples presented
 throughout my thesis.
-This examples can be compiled and executed in version 1.2.3 of Zélus.
-This version requires OCaml version 4.04.0.
+This examples can be compiled and executed in version 1.2.3 of [Zélus](http://zelus.di.ens.fr/download.html).
+This version requires [OCaml](http://ocaml.org/) version 4.04.0.
 
 There is one directory for each technical chapter of the thesis
 

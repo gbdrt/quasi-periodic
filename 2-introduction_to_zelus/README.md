@@ -15,3 +15,4 @@ Press
 - 'r' to reset the stopwatch
 - 'q' to quit the demo
 
+File clock.zls contains the Zélus model of the clock.

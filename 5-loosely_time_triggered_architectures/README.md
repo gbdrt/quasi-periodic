@@ -26,3 +26,6 @@ let node app(c1, c2, dc1, dc2) = o1, o2 where
   and po1 = link(c1, dc1, o1)
   and po2 = link(c2, dc2, o2)
 ```
+
+File qpa.zls contains the Zélus model of the quasi-periodic architecture.
+Other Zélus files (*_ltta.zls) contains the code of the LTTA controllers.

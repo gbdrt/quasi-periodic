@@ -45,7 +45,7 @@ you still need to generate the config file first.
 
 ## Related Publications
 
-A pdf version of the publications can be found on my personal webpage: <http://guillaume.baudart.eu>
+A pdf version of all the publications can be found on my personal webpage: <http://guillaume.baudart.eu>
 
 - Soundness of the Quasi-Synchronous Abstraction   
   with Timothy Bourke and Marc Pouzet.  
@@ -57,8 +57,8 @@ A pdf version of the publications can be found on my personal webpage: <http://g
 
 - Loosely Time-Triggered Architectures: Improvements and Comparisons  
   with Albert Benveniste and Timothy Bourke.  
-  *ACM Transaction on Embedded Computing Systems (TECS), Vol.15 N.4 August 2016.*
+  *ACM Transaction on Embedded Computing Systems (TECS), Vol.15 N.4 Aug. 2016.*
 
 - A Unifying View of Loosely Time-Triggered Architectures  
-  with Albert Benveniste, Anne Bouillard and Paul Caspi  
+  with Albert Benveniste, Anne Bouillard and Paul Caspi.  
   *INRIA Research Report RR-8494, Mar. 2014*

@@ -14,7 +14,7 @@ This produces four executables:
 - gc_ltta.byte: simulation of the global-clock protocol
 
 All the simulations run the following application on a
-two-node quasi-periodic architecture.
+two-node quasi-periodic architecture using one of the LTTA protocols.
 
 ```
 let node m1(po2) = 0 -> po2 + 2
@@ -28,4 +28,4 @@ let node app(c1, c2, dc1, dc2) = o1, o2 where
 ```
 
 File qpa.zls contains the Zélus model of the quasi-periodic architecture.
-Other Zélus files (*_ltta.zls) contains the code of the LTTA controllers.
+Other Zélus files (\*_ltta.zls) contains the code of the LTTA controllers.

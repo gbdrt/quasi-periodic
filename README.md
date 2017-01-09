@@ -12,7 +12,7 @@ throughout my thesis.
 | [XQuartz](http://www.xquartz.org/) | Optional >= 2.7.9 | Required on MacOS to run the examples using OCaml Graphics |
 
 ## Organization
-There is one directory for each technical chapter of the thesis
+There is one directory for each technical chapter of the thesis:
 
 2- A Short Introduction to Zélus  
 3- Quasi-Periodic Architectures  
@@ -20,7 +20,7 @@ There is one directory for each technical chapter of the thesis
 5- Loosely Time-Triggered Architectures  
 6- Symbolic Simulation  
 
-## Building the examples
+## Building the Examples
 
 To build all the examples, install
 [Zélus](http://zelus.di.ens.fr/download.html), then execute the

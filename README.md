@@ -2,9 +2,16 @@
 
 This repository contains the source code of the examples presented
 throughout my thesis.
-This examples can be compiled and executed in version 1.2.3 of [Zélus](http://zelus.di.ens.fr/download.html).
-This version requires [OCaml](http://ocaml.org/) version 4.04.0.
 
+## Dependencies
+
+| Dependency | Version | Reason |
+|------------|---------|--------|
+| [Zélus](http://zelus.di.ens.fr/download.html) | Required == 1.2.3   | Compile the example to OCaml code |
+| [OCaml](http://ocaml.org/) | Required == 4.04.0  | Run the Zélus compiler and compile the examples |
+| [XQuartz](http://www.xquartz.org/) | Optional >= 2.7.9 | Required on MacOS to run the examples using OCaml Graphics |
+
+## Organization
 There is one directory for each technical chapter of the thesis
 
 2- A Short Introduction to Zélus  

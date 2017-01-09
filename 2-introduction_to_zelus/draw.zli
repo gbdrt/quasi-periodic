@@ -1,0 +1,10 @@
+val unsafe draw_system :
+  float *
+  float *
+  float * 
+  float * 
+  float * 
+  float * 
+  int -> unit
+val unsafe input : unit -> int
+val abs : float -> float

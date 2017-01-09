@@ -1,0 +1,125 @@
+#! /bin/sh
+
+contact='guillaume.baudart@ens.fr'
+
+while : ; do
+  case "$1" in
+    "") break;;
+    -h|--help)
+        cat <<-END_HELP_TEXT
+        'configure' configures $sysname $version to adapt to many kinds of systems.
+
+        Usage: $0 [VAR=VALUE]...
+
+        To assign environment variables (e.g., ZELUSROOT, OCAMLROOT...), specify them
+        as VAR=VALUE.  See below for descriptions of some of the useful variables.
+
+        Configuration:
+          -h, --help              display this help and exit
+
+        Some influential environment variables:
+          ZELUSROOT     Path to zelus installation (such that $ZELUSROOT/bin/ocamlc)
+          OCAMLROOT     Path to ocaml installation (such that $OCAMLROOT/bin/ocamlc)
+          SUNDIALSML    Path to the Ocaml/Sundials interface
+
+        Use these variables to override the choices made by 'configure' or to help
+        it to find libraries and programs with nonstandard names/locations.
+
+        Report bugs to <$contact>.
+
+END_HELP_TEXT
+        exit 0
+        ;;
+    ZELUSROOT=*)
+        ZELUSROOT=`expr "$1" : 'ZELUSROOT=\(.*\)'`; shift;;
+    OCAMLROOT=*)
+        OCAMLROOT=`expr "$1" : 'OCAMLROOT=\(.*\)'`
+        OCAMLBIN="${OCAMLROOT}bin/"; shift;;
+    SUNDIALSML=*)
+        SUNDIALSML=`expr "$1" : 'SUNDIALSML=\(.*\)'`; shift;;
+    *)
+        printf "illegal option \"$1\".\n" 1>&2; exit 2;;
+  esac
+  shift
+done
+
+
+
+# Check for zelus installation (and version)
+if [ -z ${ZELUSROOT} ]; then
+    ZLLIB=`zeluc -where`
+    ZELUC=`which zeluc`
+else
+    ZLLIB="${ZELUSROOT%/}/lib"
+    ZELUC="${ZELUSROOT%/}/bin/zeluc.byte"
+fi
+
+
+# Check for ocaml installation (and version)
+ocaml_path=`${OCAMLBIN}ocamlc -where`
+ocaml_version=`${OCAMLBIN}ocamlc -version`
+
+if [ $? -ne 0 ]; then
+    error="${error}\n\tcould not find ocamlc"
+    ocaml_path='NOT FOUND'
+    ocaml_version=''
+    ocaml_libpath=''
+else
+    ocaml_libpath="${ocaml_path%/}/"
+    ocaml_version=" (${ocaml_version})"
+fi
+
+# Check for opam
+if command -v opam >/dev/null 2>&1; then
+    opam_libpath="$(opam config var lib)/"
+else
+    opam_libpath=''
+fi
+
+# Check for sundialsml installation
+sundialsml_path=${SUNDIALSML:-"${ocaml_libpath}sundialsml"}
+sundialsml_incl="-I ${SUNDIALSML:-"+sundialsml"}"
+
+
+sundialsml_status=${sundialsml_path}
+default_solver='Sundials_cvode'
+
+if [ ! -r "${sundialsml_path%/}/sundials.cma" ]; then
+    sundialsml_path="${opam_libpath}sundialsml"
+    sundialsml_incl="-I ${sundialsml_path}"
+
+    if [ ! -r "${sundialsml_path%/}/sundials.cma" ]; then
+        sundialsml_path=''
+        sundialsml_incl=''
+        sundialsml_status='NOT FOUND (defaulting to ode45)'
+        default_solver='Odexx.Ode45'
+    fi
+fi
+
+
+
+printf "\nConfiguration\n-------------\n"                > config.log
+
+printf "\n"                                             >> config.log
+printf "  Zelus\t\t\t${ZELUC}\n"                        >> config.log
+printf "  Ocaml\t\t\t${ocaml_path}${ocaml_version}\n"   >> config.log
+printf "  SundialsML\t\t${sundialsml_status}\n"         >> config.log
+printf "\n"                                             >> config.log
+
+if [ -n "${error}" ]; then
+    printf "Some errors occurred during configuration:${error}\n" >> config.log
+    printf "The 'config' file has not been written."              >> config.log
+    printf "\n"                                                   >> config.log
+    cat config.log
+    exit 1
+fi
+
+cat config.log
+
+(printf "# # # THIS FILE IS GENERATED AUTOMATICALLY BY CONFIGURE # # #\n"; \
+ sed -e "s#@DEFAULT_SOLVER@#${default_solver}#;
+         s#@SUNDIALSML_INCL@#${sundialsml_incl}#;
+         s#@ZELUC@#${ZELUC}#;
+         s#@ZLLIB@#${ZLLIB}#;
+         s#@OCAMLBIN@#${OCAMLBIN}#;
+         s#@OCAMLROOT@#${OCAMLROOT}#;" config.in) > config

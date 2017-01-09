@@ -1,0 +1,64 @@
+open Misc
+open Qpa
+
+(**** Round-Based LTTA ****)
+
+(* Controller *)
+let node rb_controller (i, om) = (o, im) where
+  rec automaton
+      | Wait ->
+          do (* skip *)
+          unless all_input_fresh then
+            do emit im = data(i) in Wait
+
+  and all_input_fresh = true -> i.alt
+  and o = om
+
+
+(** A small example **)
+
+let node machine1 (i) = n where
+  rec n = 0 -> (i+2)
+
+let node machine2 (i) = m where
+  rec m = 1 -> (i+2)
+
+let node p1(i) = o, im where
+  rec (o, im) = rb_controller(i, om)
+  and present im(v) -> do emit om = machine1(v) done
+
+let node p2(i) = o, im where
+  rec (o, im) = rb_controller(i, om)
+  and present im(v) -> do emit om = machine2(v) done
+
+(* Pluging two nodes with links to form an example *)
+let node example_rb (c1, dc1, c2, dc2) = (n, m) where
+  rec present c1() -> do n, r1 = p1(l2) done
+  and present c2() -> do m, r2 = p2(l1) done
+  and l1 = buff_link(c1, dc1, n, r2)
+  and l2 = buff_link(c2, dc2, m, r1)
+
+
+(** Simulation **)
+
+let node print(n,m) = o where
+  rec init o1 = () and init o2 = ()
+  and present n(v) -> do o1 = print1(v) done
+  and present m(v) -> do o2 = print2(v) done
+  and o = dummy (o1, o2)
+
+let hybrid main () =
+  (* Architecture constraints *)
+  let c1 = metro(t_min, t_max) in
+  let dc1 = delay(c1, tau_min, tau_max) in
+  let c2 = metro(t_min, t_max) in
+  let dc2 = delay(c2, tau_min, tau_max) in
+
+
+  (* Global clock *)
+  let g =  present c1() | dc1() | c2() | dc2() -> () in
+
+  present g() ->
+    let (n, m) = example_rb(c1, dc1, c2, dc2) in
+    print(n,m)
+  else ()

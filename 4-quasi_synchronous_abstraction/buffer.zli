@@ -1,0 +1,4 @@
+type buffer
+val buffer: int -> buffer
+val push: int * buffer -> buffer
+val sum: buffer -> int

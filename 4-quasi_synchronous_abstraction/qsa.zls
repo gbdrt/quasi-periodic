@@ -1,0 +1,72 @@
+open Buffer
+
+(* Quasi-synchronous Abstraction, symmetrical condition *)
+
+let node check_qs(c1, c2) = ok where
+  rec automaton
+      | Zero -> do ok = true unless c1() then One
+      | One  -> do ok = true unless c1() & c2() then One
+                               else c1() then Two
+                               else c2() then Zero
+      | Two  -> do ok = true unless c1() then Err
+                               else c2() then Zero
+      | Err  -> do ok = false done
+
+let node filter_qs(c1, c2) = ok where
+   rec automaton
+      | Zero -> do ok = true unless c1() then One
+      | One  -> do ok = true unless c1() & c2() then One
+                               else c1() then Two
+                               else c2() then Zero
+      | Two  -> do ok = true unless c1() then Err
+                               else c2() then Zero
+      | Err -> do ok = false unless c2() then Zero
+
+let node sch_qs(c1, c2) =  c1', c2' where
+  rec ok = filter_qs(c1, c2)
+  and present c1() & ok -> do emit c1' done
+  and present c2() & ok -> do emit c2' done
+
+
+(* Quasi-synchronous abstraction, asymmetrical condition *)
+
+let node check_qs_1(c1, c2) = ok where
+  rec init p = 0
+  and init ok = true
+  and present
+      | c1() on (p = 2) -> do ok = false done
+      | c2() -> do p = 0 done
+      | c1() -> do p = last p + 1 done
+
+let node check_qs_2(c1, c2) = ok where
+  rec init p = 0
+  and init ok = true
+  and present
+      | c1() & c2() -> do p = 1 done
+      | c2() on (p = 2) -> do ok = false done
+      | c1() -> do p = 0 done
+      | c2() -> do p = last p + 1 done
+
+
+(* n/m-quasi-synchronous abstraction*)
+
+let node check_nmqs_1(n, m, c1, c2) = ok where
+  rec init b = buffer(m - 2)
+  and init p = 0
+  and init ok = true
+  and present c2() -> do b = push(last p, last b) done
+  and present
+      | c1() on (sum(b) + p = n) -> do ok = false done
+      | c2() -> do p = 0 done
+      | c1() -> do p = last p + 1 done
+
+let node check_nmqs_2(n, m, c1, c2) = ok where
+  rec init b = buffer(m - 2)
+  and init p = 0
+  and init ok = true
+  and present c1() -> do b = push(last p, last b) done
+  and present
+      | c1() & c2() -> do p = 1 done
+      | c2() on (sum(b) + p = n) -> do ok = false done
+      | c1() -> do p = 0 done
+      | c2() -> do p = last p + 1 done

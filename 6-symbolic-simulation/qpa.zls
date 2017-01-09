@@ -1,0 +1,102 @@
+open Symulib
+
+(** Compiling a two-node quasi-periodic architecture **)
+(*
+let hybrid metro() = c where
+   rec timer t init 0 reset c() -> 0
+   and always {t <= 5}
+   and present {3 <= t} -> do emit c done
+
+let hybrid archi() = c1, c2 where
+   rec c1 = metro()
+   and c2 = metro()
+ *)
+
+(** Utils **)
+let zgeq (t, v) = (string_of_int v)^" <= "^"x"^(string_of_int t)
+let zleq (t, v) = "x"^(string_of_int t)^" <= "^(string_of_int v)
+
+let node ztrig (sv, zcp, gvp) = zg where
+  rec fv = filter(gvp, sv)
+  and zg = zinter(zcp, zinterfold(fv))
+
+let node znext (wait, zi, za, gl)= zc, bv, bw where
+  rec dp = if wait then (dzero fby d) else dzero
+  and dl = zdistmap(zi, gl)
+  and d = mindist(dl, dp)
+  and zn = zsweep (zi, dp, d)
+  and zc = zinter(zn, za)
+  and bv = zenabled(zc, gl)
+  and zm = zinter(zup zn, za)
+  and bw = not (zequal (zm, zc))
+
+
+(** Compiling metro **)
+(*
+let hybrid metro() = c where
+   rec timer x init 0 reset tick() -> 0
+   and always {x <= 5}
+   and present {3 <= x} -> do emit tick done
+*)
+let node metro_sy(t, wait, c, zg, (t_min, t_max)) = c, zi, za, gv where
+  rec zit = present (true fby false) -> zreset(zg, t, 0)
+            | c -> zreset(zg, t, 0)
+            else zg
+  and zs = zmake (zgeq(t, t_min))
+  and zb = zmake(zleq(t, t_max))
+  and za = zinterfold(cons(zb, empty_list()))
+  and zi = if wait then (zall fby zi) else zit
+  and gv = cons(zs, empty_list())
+
+
+(** Compiling archi **)
+(*
+let hybrid archi() = c1, c2 where
+   rec c1 = metro()
+   and c2 = metro()
+*)
+let node archi_sy((t1, t2), wait, (c1, c2), zg, (t_min, t_max)) = (c1', c2'), zi, za, gv where
+  rec c1', zi1, za1, gv1 = metro_sy(t1, wait, c1, zg, (t_min, t_max))
+  and c2', zi2, za2, gv2 = metro_sy(t2, wait, c2, zi1, (t_min, t_max))
+  and za = zinterfold(cons(za1, cons(za2, empty_list())))
+  and zi = if wait then (zall fby zi) else zi2
+  and gv = concat(gv1, gv2)
+
+let node archi(wait, (c1, c2), (t_min, t_max)) = (c1', c2'), bv, bw, zc where
+  rec zg = ztrig(cons(c1, cons(c2, empty_list())), zcp, gvp)
+  and (c1', c2'), zi, za, gv = archi_sy((1, 2), wait, (c1, c2), zg, (t_min, t_max))
+  and zc, bv, bw = znext(wait, zi, za, gv)
+  and zcp = zall fby zc
+  and gvp = empty_list() fby gv
+
+
+(** Simulation **)
+type event = Inactive | Wait | C1 | C2 | C1C2
+
+let node main_symb(choice) = zc, bw, bc1, bc2, prg where
+  rec (_, _), bv, bw,  zc = archi(choice=Wait, (choice=C1 or choice=C1C2, choice=C2 or choice=C1C2), (3, 5))
+  and prg = print_guards(bw, ("c1", bc1), ("c2", bc2))
+  and bc1 = nth(bv, 0)
+  and bc2 = nth(bv, 1)
+
+let node input (key, bw, bc1, bc2) = o where
+  o = match key with
+  | "c1" -> if bc1 then C1 else Inactive
+  | "c2" -> if bc2 then C2 else Inactive
+  | "c1c2" -> if bc1 && bc2 then C1C2 else Inactive
+  | "wait"  -> if bw then Wait else Inactive
+  | "quit"  -> kill()
+  | _       -> Inactive
+  end
+
+let node simulation () = zc, prg where
+  rec key = read_line ()
+  and a = false -> not true
+  and choice = input (key, false fby bw, false fby bc1, false fby bc2)
+  and zc, bw, bc1, bc2, prg =
+    present (true fby false) | (choice <> Inactive) -> main_symb(choice)
+    init zall, false, false, false, 0
+
+let node main () =
+  let zc, prg = simulation() in
+  zdraw (1,2,6,6, zc)

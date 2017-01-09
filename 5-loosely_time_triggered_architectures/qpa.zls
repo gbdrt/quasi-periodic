@@ -1,0 +1,109 @@
+open Misc
+
+(*** Discrete Time Model ***)
+
+(* Memory. Maintain the last received value on a signal *)
+let node mem (i, mi) = o where
+  rec init m = mi
+  and present i(v) -> do m = v done
+  and o = last m
+
+(* Modeling links *)
+let node channel (c, dc, i) = o where
+  rec init q = empty
+  and trans =  present (is_empty (last q)) -> false else front(last q) <> none
+  and present
+      | i(v) -> do emit s = some(v) done
+      | c() -> do emit s = none done
+  and present
+      | dc() & s(v) -> do q = enqueue(dequeue(last q), v) done
+      | s(v) -> do q = enqueue (last q, v) done
+      | dc() -> do q = dequeue (last q) done
+  and present
+      | dc() & trans -> do emit o = get(front (last q)) done
+
+let node link (c, dc, i, mi) = o where
+  rec s = channel (c, dc, i)
+  and o = mem (s, mi)
+
+
+(** Freshness of value **)
+type 'a msg = {data : 'a; alt : bool}
+let data v = v.data
+
+let node alternate i = o where
+  rec present i(v) -> local flag in
+        do flag = true -> not (pre flag)
+        and emit o = {data = v; alt = flag} done
+
+let node fresh (i, r, st) = o where
+  rec init m = st
+  and present r(_) -> do m = i.alt done
+  and o = (i.alt <> last m)
+
+(** LTTA links **)
+let node ltta_link (c, dc, i, mi) = o where
+  rec s = channel (c, dc, i)
+  and sa = alternate s
+  and o = mem (sa, {data = mi; alt = false})
+
+
+(** Modeling buffer links **)
+let node buffer (i, r) = o where
+  rec init q = enqueue(empty, 4012)
+  and not_empty = not (is_empty (last q))
+  and present
+      | r(_) on not_empty & i(v)  ->
+          do q = enqueue(dequeue(last q), v) done
+      | r(_) on not_empty ->
+          do q = dequeue (last q) done
+      | i(v) ->
+          do q = enqueue (last q, v) done
+
+  and o = if not_empty
+          then {data=front (last q); alt=true}
+          else {data= (-1); alt=false}
+
+let node buff_link (c, dc, i, r) = o where
+  rec s = channel (c, dc, i)
+  and o = buffer (s, r)
+
+(*** Real-Time Model ***)
+
+(* Architecture characteristics *)
+let t_nom = 1.
+let tau_nom = 0.01
+let eps = 0.01
+
+let t_min = t_nom *. (1. -. eps)
+let t_max = t_nom *. (1. +. eps)
+let tau_min = tau_nom *. (1. -. eps)
+let tau_max = tau_nom *. (1. +. eps)
+
+(* Quasi-periodic clocks *)
+let hybrid metro (t_min, t_max) = c where
+  rec der t = 1.0 init -. arbitrary (t_min, t_max)
+      reset z -> -. arbitrary (t_min, t_max)
+  and z = up(t)
+  and present (init) | z -> do emit c done
+
+
+(* Delayed clock. Model transmission delay *)
+let eps_delay = 10e-5
+
+let add_horizon(q, tr, v_min, v_max) =
+  let d = arbitrary(tr +. v_min, tr +. v_max) in
+  if not (is_empty(q)) then enqueue(q, max(back(q) +. eps_delay, d))
+  else enqueue(q, d)
+
+let hybrid delay(c, tau_min, tau_max) = dc where
+  rec init q = empty
+  and der time = 1.0 init 0.0
+  and der t = 1.0 init 0.0
+      reset z on (size(q) > 0) | c() on (size(q) = 1) -> time -. front(q)
+  and z = up (t)
+  and present
+      | c() & z -> do q = add_horizon(dequeue(last q), time, tau_min, tau_max) done
+      | c() -> do q = add_horizon(last q, time, tau_min, tau_max) done
+      | z -> do q = dequeue(last q) done
+  and present z -> do emit dc done

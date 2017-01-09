@@ -1,0 +1,52 @@
+# programs used
+
+ZLLIB     ?= @ZLLIB@
+ZELUC     ?= @ZELUC@
+OCAML     ?= @OCAMLBIN@ocaml
+OCAMLC    ?= @OCAMLBIN@ocamlc
+OCAMLLEX  ?= @OCAMLBIN@ocamllex
+OCAMLYACC ?= @OCAMLBIN@ocamlyacc
+OCAMLOPT  ?= @OCAMLBIN@ocamlopt
+OCAMLDEP  ?= @OCAMLBIN@ocamldep
+OCAMLRUN  ?= @OCAMLBIN@ocamlrun
+OTAGS	  ?= otags
+
+OCAMLFLAGS    ?= -annot -w -3-26
+OCAMLOPTFLAGS ?= -annot
+
+UNIX  = unix.cma
+UNIXX = unix.cmxa
+
+SOLVER = @DEFAULT_SOLVER@
+
+SUNDIALS=@SUNDIALSML_INCL@
+ifneq ($(SUNDIALS),)
+SUNDIALS_CVODE = sundials.cma
+OPTIONAL_SOLVER_OBJS = solvers/sundials_cvode.cmo
+DISTOPTION = -sundials
+else
+DISTOPTION = -nosundials
+endif
+
+ZLSTDLIBS = bigarray.cma unix.cma $(SUNDIALS) $(SUNDIALS_CVODE)
+ZLEXTRALIBS = zllib.cma
+
+.SUFFIXES : .mli .ml .cmi .cmo .cmx .mll .mly .zli .zli .byte .opt
+
+%.cmi: %.mli
+	$(OCAMLC) $(OCAMLFLAGS) -c $(INCLUDES) $<
+
+%.cmo %.cmi: %.ml
+	$(OCAMLC) $(OCAMLFLAGS) -c -I $(ZLLIB) $(INCLUDES) $<
+
+%.cmx %.cmi: %.ml
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) -I $(ZLLIB) -c $(INCLUDES:.cma=.cmxa) $<
+
+%.zci: %.zli
+	$(ZELUC) -I $(ZLLIB) $(ZELUCFLAGS) $<
+
+%.ml: %.mll
+	$(OCAMLLEX) $<
+
+%.ml %.mli: %.mly
+	$(OCAMLYACC) $<

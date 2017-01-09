@@ -1,0 +1,73 @@
+open Draw
+
+(******************* Pendulum Clock **********************)
+
+(* Pendulum parameters *)
+let g = 9.81
+let l = 1.
+let theta0 = 0.5
+
+(* Weight parameters *)
+let m1 = 10.5
+let m2 = 10.
+let h0 = 2.
+
+(* escapement parameters *)
+let thetac = 0.4
+
+let hybrid pendulum theta0 = theta where
+  rec der thetap =  -. (g /. l) *. sin (theta) init 0.0
+  and der theta = thetap init theta0
+
+let hybrid weight h0 = h, v where
+  rec der v = g *. (m2 -. m1) /. (m2 +. m1) init 0.0
+  and der h = v init h0
+
+let hybrid hand (ti, v) = t where
+  rec der t = -. v init ti
+
+let hybrid clock (h0, theta0) = (theta, h, t, tick) where
+  rec theta = pendulum(theta0)
+  and automaton
+      | Block(hi, ti) ->
+          do h = hi  and v = 0.0 and t = ti
+          until up(thetac -. abs(theta)) then Move(hi,ti)
+      | Move(hi, ti) ->
+          do h, v = weight hi and t = hand (ti, v)
+          until up(abs(theta) -. thetac) then do emit tick in Block(h, t)
+  init Block(h0, 0.0)
+
+let node stopwatch(toggle, restart) = c where
+  rec automaton
+      | Main -> do automaton
+                   | Idle -> do c = 0
+                       until toggle() then Run(0)
+                   | Run(ci) -> do c = ci fby (c + 1)
+                       until toggle() then Stop(c)
+                   | Stop(ci) -> do c = ci
+                       until toggle() then Run(c)
+         until restart() then Main
+
+
+let hybrid chrono(h0, theta0, toggle, restart) = theta, h, t, c  where
+  rec init c = 0
+  and theta, h, t, tick = clock(h0, theta0)
+  and present tick() | toggle() | restart() -> do c = stopwatch(toggle, restart) done
+
+
+(********** Simulation ************)
+
+let hybrid keyboard () = toogle, restart where
+  rec init ok = 0
+  and s = period (0.04)
+  and present s -> do ok = input () done
+  and present s on (ok = 1) -> do emit toogle done
+  and present s on (ok = 2) -> do emit restart done
+
+let hybrid main () =
+  let ok = period (0.04) in
+  let toggle, restart = keyboard () in
+  let (theta, h, t, c) = chrono (h0, theta0, toggle, restart) in
+
+  present ok -> draw_system (l, thetac, theta, h0, h, t, c);
+  ()

@@ -1,0 +1,86 @@
+open Misc
+open Qpa
+
+(**** Clock Synchronization ****)
+
+(* Master clock protocol *)
+let hybrid master_clock() = gt1, gt2 where
+  rec init gt1 = 0.0
+  and init gt2 = 0.0
+  and cg = metro(t_min, t_max)
+  and dg1 = delay(cg, tau_min, tau_max)
+  and dg2 = delay(cg, tau_min, tau_max)
+  and present dg1() -> do gt1 = last gt1 +. t_nom done
+  and present dg2() -> do gt2 = last gt2 +. t_nom done
+
+let phi = t_max +. tau_max -. tau_min
+let rho = eps
+let pi = phi +. 2. *. rho *. t_max
+let t_g = pi
+let m =  ceil (tau_max /. t_g) +. 1.
+
+let node slave(gt) = t where
+  rec t = if (gt > 0.0 fby gt) then gt +. tau_max
+          else 0.0 fby (t +. t_nom)
+
+(* Controller *)
+let node gc_controller (gt, i, om) = (o, im) where
+  rec t = slave(gt)
+  and automaton
+      | Wait(h) -> do (* skip *)
+                   unless (t > h) then
+                   do emit im = data(i) in Wait(h +. (m +. 1.) *. t_g)
+      init Wait(0.0)
+  and o = om
+
+
+(** A small example **)
+
+let node machine1 (i) = n where
+  rec n = 0 -> (i+2)
+
+let node machine2 (i) = m where
+  rec m = 1 -> (i+2)
+
+let node q1(gt, i) = o, im where
+  rec (o, im) = gc_controller(gt, i, om)
+  and init pr = ()
+  and present im(v) -> do emit om = machine1(v) done
+
+let node q2(gt, i) = o, im where
+  rec (o, im) = gc_controller(gt, i, om)
+  and init pr = ()
+  and present im(v) -> do emit om = machine2(v) done
+
+(* Pluging two nodes with links to form an example *)
+let node example_gc (c1, dc1, c2, dc2, gt1, gt2) = (n, m) where
+  rec present c1() -> do n, r1 = q1(gt1, l2) done
+  and present c2() -> do m, r2 = q2(gt2, l1) done
+  and l1 = buff_link(c1, dc1, n, r2)
+  and l2 = buff_link(c2, dc2, m, r1)
+
+
+(** Simulation **)
+
+let node print(n,m) = o where
+  rec init o1 = () and init o2 = ()
+  and present n(v) -> do o1 = print1(v) done
+  and present m(v) -> do o2 = print2(v) done
+  and o = dummy (o1, o2)
+
+let hybrid main () =
+  (* Architecture constraints *)
+  let c1 = metro(t_min, t_max) in
+  let dc1 = delay(c1, tau_min, tau_max) in
+  let c2 = metro(t_min, t_max) in
+  let dc2 = delay(c2, tau_min, tau_max) in
+
+  let gt1, gt2 = master_clock() in
+
+  (* Global clock *)
+  let g =  present c1() | dc1() | c2() | dc2() -> () in
+
+  present g() ->
+    let (n, m) = example_gc (c1, dc1, c2, dc2, gt1, gt2) in
+    print(n,m)
+  else ()

@@ -1,0 +1,80 @@
+open Misc
+open Qpa
+
+(**** Time-Based LTTA ****)
+
+(* Constants of thm 6 *)
+let p =
+  int_of_float (
+  floor ((2. *. tau_max +. t_max) /.
+        t_min) +. 1.)
+
+let q =
+  int_of_float (
+  floor ((tau_max  -. tau_min +. (1. +. float (p)) *. t_max) /.
+         t_min -. float (p)) +. 1.)
+
+(* Controllers *)
+let node tb_controller (i, om, mi) = (o, im) where
+  rec init n = 1
+  and m = mem(om,mi)
+  and automaton
+      | Wait ->
+          do n = p -> (last n - 1)
+          until (n = 1) then
+            do emit im = data(i) in Ready
+      | Ready ->
+          do n = q -> (last n - 1)
+          until ((n = 1) or preempted) then
+            do emit o = m in Wait
+
+ and preempted = fresh(i, im, false)
+
+
+(** A small example **)
+
+let node machine1 (i) = n where
+  rec n = 0 -> (i+2)
+
+let node machine2 (i) = m where
+  rec m = 1 -> (i+2)
+
+let node n1(i) = o where
+  rec (o, im) = tb_controller(i, om, -1)
+  and present im(v) -> do emit om = machine1(v) done
+
+let node n2(i) = o where
+  rec (o, im) = tb_controller(i, om, -1)
+  and present im(v) -> do emit om = machine2(v) done
+
+
+(* Pluging two nodes with links to form an example *)
+let node example_tb (c1, dc1, c2, dc2) = (n, m) where
+  rec present c1() -> do n = n1(l2) done
+  and present c2() -> do m = n2(l1) done
+  and l1 = ltta_link(c1, dc1, n, -1)
+  and l2 = ltta_link(c2, dc2, m, -1)
+
+
+(** Simulation **)
+
+let node print(n,m) = o where
+  rec init o1 = () and init o2 = ()
+  and present n(v) -> do o1 = print1(v) done
+  and present m(v) -> do o2 = print2(v) done
+  and o = dummy (o1, o2)
+
+let hybrid main () =
+  (* Architecture constraints *)
+  let c1 = metro(t_min, t_max) in
+  let dc1 = delay(c1, tau_min, tau_max) in
+  let c2 = metro(t_min, t_max) in
+  let dc2 = delay(c2, tau_min, tau_max) in
+
+  (* Global clock *)
+  let g =  present c1() | dc1() | c2() | dc2() -> () in
+
+  present g() ->
+    let (n, m) = example_tb(c1, dc1, c2, dc2) in
+    print(n,m)
+  else ()

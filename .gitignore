@@ -1,3 +1,13 @@
+# macos admin
+.DS_Store
+
+# emacs tmp files
+*~
+
+# zelus generated files
+*.zci
+
+# ocaml generated files
 *.annot
 *.cmo
 *.cma

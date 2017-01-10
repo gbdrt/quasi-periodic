@@ -7,7 +7,7 @@ throughout my thesis.
 
 | Dependency | Version | Reason |
 |------------|---------|--------|
-| [Zélus](http://zelus.di.ens.fr/download.html) | Required == 1.2.3   | Compile the example to OCaml code |
+| [Zélus](http://zelus.di.ens.fr/download.html) | Required == 1.2.3   | Compile the examples to OCaml code |
 | [OCaml](http://ocaml.org/) | Required == 4.04.0  | Run the Zélus compiler and compile the examples |
 | [XQuartz](http://www.xquartz.org/) | Optional >= 2.7.9 | Required on MacOS to run the examples using OCaml Graphics |
 

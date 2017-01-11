@@ -23,6 +23,10 @@ clock.ml clock_main.ml: draw.zci clock.zls
 	$(ZELUC) -I $(ZLLIB) $(ZLCFLAGS) -s main -sampling 0 clock.zls
 	mv main.ml clock_main.ml
 
+basics:
+	$(ZELUC) -I $(ZLLIB) -i basics.zls
+
+
 depend: .depend
 .depend:
 	$(OCAMLDEP) $(INCLUDE) *.mli *.ml > .depend

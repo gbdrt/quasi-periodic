@@ -1,4 +1,15 @@
-# The Zélus Clock
+# A Short Introduction to Zélus
+
+## Basics
+
+To compute the type signatures of the basic examples that illustrate
+the Zélus syntax type:
+
+```
+make basics
+```
+
+## The Zélus Clock
 
 To build and start the clock, type the following commands:
 

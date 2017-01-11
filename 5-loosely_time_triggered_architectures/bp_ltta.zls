@@ -38,8 +38,8 @@ let node m2(i,ra) = o,a where
 
 (* Pluging two nodes with links to form an example *)
 let node example_bp (c1, dc1, c2, dc2) = (n, m) where
-  rec present c1() -> do n,an = m1(l2,l2a) done
-  and present c2() -> do m,am = m2(l1,l1a) done
+  rec present c1() -> do n, an = m1(l2, l2a) done
+  and present c2() -> do m, am = m2(l1, l1a) done
   and l1 = ltta_link(c1, dc1, n, -1)
   and l1a = ltta_link(c1, dc1, an, 4012)
   and l2 = ltta_link(c2, dc2, m, -1)

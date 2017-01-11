@@ -2,8 +2,8 @@
 
 ## Basics
 
-To compute the type signatures of the basic examples that illustrate
-the Zélus syntax type:
+File basics.zls contains basic examples that illustrate the Zélus syntax.
+To compute the type signatures these examples type:
 
 ```
 make basics

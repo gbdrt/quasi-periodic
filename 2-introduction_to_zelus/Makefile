@@ -32,7 +32,7 @@ depend: .depend
 	$(OCAMLDEP) $(INCLUDE) *.mli *.ml > .depend
 
 clean:
-	-@rm -f $(EXAMPLE:.zls=.ml) $(EXAMPLE:.zls=_main.ml)
+	-@rm -f $(EXAMPLE:.zls=.ml) $(EXAMPLE:.zls=_main.ml) basics.ml
 	-@rm -f *.o *.cm[oix] *.annot *.obc *.zci .depend
 	-@rm -f $(EXAMPLE:%.zls=%.byte) $(EXAMPLE:%.zls=%.opt)
 

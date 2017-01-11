@@ -1,0 +1,30 @@
+let node nat(v) = cpt where
+  rec cpt = v -> pre (cpt + 1)
+
+let average(x, y) = (x + y) / 2
+
+let node positive(i) = s where
+  rec present i(v) -> do emit s = (v > 0) done
+
+let node cumul(i) = o where
+  rec init o = 0
+  and present i(v) -> do o = last o + v done
+
+let node edge_strong(x) = o where
+  rec automaton
+      | Wait -> do o = false unless (x = 0) then Found
+      | Found -> do o = true done
+
+let node edge_weak(x) = o where
+  rec automaton
+      | Wait -> do o = false until (x = 0) then Found
+      | Found -> do o = true done
+
+let hybrid affine(a, b) = x where
+  rec der x = a init b
+
+let hybrid sawtooth(a, b) = o where
+  rec init o = 0
+  and der x = a init b reset z -> b
+  and z = up(x)
+  and present z -> do o = nat(1) done

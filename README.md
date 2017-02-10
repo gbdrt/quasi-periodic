@@ -36,7 +36,7 @@ it. In this case, you need to specify the path to the Zélus directory
 before building the examples:
 
 ```
-./configure ZELUSROOT=~/Downloads/zelus-1.2.2-nosundials-byte
+./configure ZELUSROOT=~/Downloads/zelus-1.2.3-nosundials-byte
 make
 ```
 
